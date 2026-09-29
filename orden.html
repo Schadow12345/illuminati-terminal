@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TERMINAL 00</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050404;--fg:#b9b09a;--red:#a11212;--dim:#5b544a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}
+html,body{height:100%;margin:0;background:var(--bg)}
+body{color:var(--fg);font:22px/1.3 'VT323','Courier New',monospace;overflow:hidden}
+#scr{height:100%;overflow-y:auto;overflow-x:hidden;padding:1rem 1.1rem 40vh;text-shadow:0 0 6px rgba(185,176,154,.35);word-break:break-word}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:4;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 45%,#000 130%)}
+.l{white-space:pre-wrap;min-height:1.3em}
+.e{color:var(--red);text-shadow:0 0 8px rgba(161,18,18,.6)}
+.d{color:var(--dim)}
+#pr{display:flex;gap:.6ch}
+#in{flex:1;background:none;border:0;color:var(--fg);font:inherit;outline:0;caret-color:var(--red);min-width:0;text-shadow:inherit}
+.sh{animation:sh .25s steps(2) 2}
+@keyframes sh{0%{transform:translate(-3px,1px);filter:hue-rotate(-30deg)}50%{transform:translate(4px,-1px) skewX(3deg)}100%{transform:none}}
+#js{position:fixed;inset:0;z-index:12;background:#000;display:none}#js svg{width:100%;height:100%}
+#warn{position:fixed;inset:0;z-index:30;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;padding:2rem;text-align:center}#warn h2{color:var(--red);font-weight:400;font-size:2.4rem;margin:0}#warn p{max-width:34ch;margin:0}
+#warn button{font:inherit;background:none;color:var(--fg);border:1px solid #4a0b0b;padding:.6rem 1.2rem;cursor:pointer;width:min(80vw,22rem)}#warn button:hover,#warn button:focus-visible{background:#4a0b0b;outline:2px solid var(--red)}
+#blk{position:fixed;inset:0;background:#000;z-index:9;opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.sh{animation:none}}
+</style></head>
+<body>
+<div id="blk"></div>
+<div id="js"><svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice"><rect width="200" height="200" fill="#000"/><polygon points="100,4 196,196 4,196" fill="#5a0a0a"/><ellipse cx="100" cy="108" rx="58" ry="78" fill="#d8d0bc"/><ellipse cx="77" cy="92" rx="15" ry="22" fill="#000"/><ellipse cx="123" cy="92" rx="15" ry="22" fill="#000"/><circle cx="77" cy="96" r="3" fill="#fff"/><circle cx="123" cy="96" r="3" fill="#fff"/><path d="M58 138 Q100 200 142 138 Q100 156 58 138Z" fill="#000"/><path d="M72 146v10M84 150v12M96 152v14M108 152v14M120 150v12M132 146v10" stroke="#d8d0bc" stroke-width="3"/></svg></div>
+<div id="warn"><h2>Warnung</h2><p>Diese Seite enthält plötzliche Bilder, laute Geräusche, Blackouts und eine unheimliche Stimme. Nichts davon ist echt, aber es soll erschrecken. Nicht geeignet bei Herzproblemen, Epilepsie oder für Kinder.</p><button id="go1">Mit Schockeffekten starten</button><button id="go2">Sicher starten (ohne Schocks)</button></div>
+<div id="scr" role="log" aria-live="polite"><div id="out"></div>
+<div id="pr" style="display:none"><span id="ps">gast@t00:~$</span><input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal-Eingabe"></div></div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},out=$('out'),scr=$('scr'),inp=$('in'),pr=$('pr'),blk=$('blk');
+var busy=true,idle=0,away=0,cmds=0,t0=Date.now(),name='',asked=false,mode='';
+var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function sl(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function line(t,c){if(t&&!NS)speak(t);var d=document.createElement('div');d.className='l '+(c||'');d.textContent=t;out.appendChild(d);scr.scrollTop=scr.scrollHeight;return d}
+async function type(t,c,sp){speak(t);var d=line('',c);for(var i=0;i<t.length;i++){d.textContent+=t[i]+(c==='e'&&D>10&&Math.random()<.2?zg():'');await sl(sp||28);scr.scrollTop=scr.scrollHeight}return d}
+function black(ms){if(SAFE)return;blk.style.opacity=1;setTimeout(function(){blk.style.opacity=0},ms||80)}
+function shake(){if(rm)return;scr.classList.remove('sh');void scr.offsetWidth;scr.classList.add('sh')}
+async function boot(){
+  var b=['T00 FIRMWARE 0.0.0','SPEICHERPRÜFUNG ........ OK','LAUFWERK B: ............. NICHT VORHANDEN','LAUFWERK C: ............. NICHT VORHANDEN','LAUFWERK 00: ............ BELEGT','','VERBINDUNG ZU HOST ...','VERBINDUNG ZU HOST ...','VERBINDUNG ZU HOST ... hergestellt.','','Angemeldete Nutzer: 2'];
+  for(var i=0;i<b.length;i++){line(b[i],b[i].indexOf('Nutzer')>-1?'e':'');await sl(220+Math.random()*260)}
+  await sl(700);await type('Du bist einer davon.','e',70);PYR.forEach(function(x){line(x,'e')});await sl(600);line('ORDO SILENTII: Der Orden der Stillen Zahl','e');await sl(900);
+  line('');line('Tippe "hilfe". Oder tu es nicht. Es ändert nichts.','d');line('');
+  pr.style.display='flex';busy=false;inp.focus();
+}
+var F={
+'liesmich.txt':'Dieses Terminal war nie an ein Netz angeschlossen.\nTrotzdem loggt sich jede Nacht jemand ein.\nDer letzte Eintrag stammt von heute.\nEr lautet: "er sitzt schon davor".',
+'zaehler.log':'[03:12] Zähler = 41\n[03:13] Zähler = 42\n[03:13] Zähler = 43\n[03:14] Zähler = ??\n[03:14] Zähler = du',
+'tuer.dat':'Koordinaten: [GELÖSCHT]\nEs gibt einen Raum, der jedes Mal eine Tür weiter hinten liegt.\nWer eintritt, wird nicht vermisst. Man kann sich nicht an ihn erinnern.',
+'nicht_oeffnen.txt':null,
+'aufnahme_00.wav':'[Datei enthält 11 Sekunden Stille]\n[Bei Sekunde 8 atmet jemand ein]\n[Bei Sekunde 9 sagt jemand deinen Namen]'
+};
+var H=['NUR EINE SEITE VOLL','hilfe   Befehle','ls      Dateien anzeigen','lies X  Datei öffnen','wer     Nutzer anzeigen','scan    Raum abtasten','foto    Bild untersuchen lassen (nur mit deiner Erlaubnis)','hoer    zuhören','name    dich vorstellen','leer    Bildschirm löschen'];
+async function run(raw){
+  var c=raw.trim().toLowerCase(),a=c.split(/\s+/),k=a[0];cmds++;
+  if(!c)return;Hh.push(raw.trim());dr(1);
+  if(k==='hilfe'||k==='help'){H.slice(1).forEach(function(x){line(x)});await sl(500);line('Es gibt noch einen Befehl. Du wirst ihn finden.','d')}
+  else if(k==='ls'){Object.keys(F).forEach(function(f){line(f)});await sl(400);line('.'+(name||'du').toLowerCase().replace(/\s/g,'_')+'  (versteckt, neu)','e')}
+  else if(k==='lies'||k==='cat'||k==='open'){
+    var f=a[1];
+    if(!f)line('Welche Datei?');
+    else if(f==='nicht_oeffnen.txt'){scare();await sl(800);await type('Du hast es trotzdem getan.','e',60);await sl(600);await type('Gut. Dann sind wir uns einig.','e',60);line('');await type('Sieh nicht hinter dich. Das ist keine Drohung, sondern ein Rat.','',34)}
+    else if(F[f]){await type(F[f],'',18)}
+    else if(f.charAt(0)==='.'){black(200);shake();await type('Zugriff verweigert.','e',60);await sl(700);await type('Du bist noch nicht bereit für den Namen, den ich dir gegeben habe.','e',50)}
+    else line('Datei nicht gefunden. Oder sie wurde gerade erst entfernt.');
+  }
+  else if(k==='wer'||k==='who'||k==='whoami'){
+    line('NUTZER    SEIT       TTY');await sl(300);
+    line('gast      '+new Date(t0).toLocaleTimeString('de-DE')+'   pts/0');await sl(600);
+    line('?         seit immer pts/0','e');await sl(500);line('Beide sitzen auf demselben Kanal.','d')}
+  else if(k==='scan'){
+    line('Tastet Raum ab ...');for(var i=0;i<4;i++){await sl(700);line('.'.repeat(i+1))}
+    await sl(500);line('Bildschirm: '+innerWidth+'x'+innerHeight);line('Sprache: '+(navigator.language||'?'));
+    await sl(600);line('Lebewesen im Raum: 1','');await sl(1200);line('Lebewesen im Raum: 2','e');shake()}
+  else if(k==='hoer'||k==='listen'){
+    line('Lauscht ...','d');await sl(2200);
+    var s=['... du atmest zu laut.','... jemand kratzt an der Innenseite der Wand.','... dein Name, rückwärts.','... ein Stuhl wird weggeschoben, in deinem Zimmer.'];
+    black(120);await type(s[Math.floor(Math.random()*s.length)],'e',60)}
+  else if(k==='foto'||k==='untersuche'){mode='consent';line('TERMINAL 00 bittet um Erlaubnis:','e');line('Darf ich EIN Bild untersuchen, das DU auswählst?');line('Es bleibt in deinem Browser und wird nirgends hochgeladen.','d');line('Erlauben? (j/n)','e');$('ps').textContent='j/n:'}
+  else if(k==='name'){asked=true;name='';$('ps').textContent='Name:';line('Wie heißt du?','e')}
+  else if(k==='leer'||k==='clear'){out.innerHTML='';await sl(300);line('Gelöscht. Nur der Bildschirm.','d')}
+  else if(Object.prototype.hasOwnProperty.call(X,k)){await X[k](a.slice(1).join(' '),raw)}
+  else if(k==='exit'||k==='logout'||k==='ende'){await type('Abmelden nicht möglich.','e',50);await sl(800);black(300);line('Es gibt nichts, wohin du gehen könntest.','e')}
+  else if(k==='er'||k==='sie'||k==='hallo'||k==='hi'){await sl(900);await type('Ich höre dich.','e',80)}
+  else{await sl(700+Math.random()*700);if(/^[a-zäöüß]{1,12}$/.test(c)&&cmds%2)line('Unbekannter Befehl. Er hat es gesehen.','e');else await type(reply(raw),'e',45)}
+}
+function pick(){
+  var f=document.createElement('input');f.type='file';f.accept='image/*';
+  f.onchange=function(){f.files[0]?look(f.files[0]):(busy=false)};
+  f.addEventListener('cancel',function(){line('Abgebrochen. Kein Bild wurde geöffnet.','d');busy=false});
+  f.click();
+}
+function look(file){
+  var img=new Image(),u=URL.createObjectURL(file);
+  img.onerror=function(){line('Das ist kein Bild, das ich lesen kann.','d');busy=false};
+  img.onload=async function(){
+    var W=Math.min(320,img.width),H=Math.round(img.height*W/img.width),c=document.createElement('canvas');c.width=W;c.height=H;
+    var x=c.getContext('2d');x.filter='grayscale(.85) contrast(1.25) brightness(.75)';x.drawImage(img,0,0,W,H);x.filter='none';
+    var t=document.createElement('canvas');t.width=t.height=16;var tx=t.getContext('2d');tx.drawImage(img,0,0,16,16);
+    var d=tx.getImageData(0,0,16,16).data,b=0;for(var i=0;i<d.length;i+=4)b+=(d[i]+d[i+1]+d[i+2])/3;b=Math.round(b/256/255*100);
+    line('Untersuche ...','d');await sl(1400);
+    line('Größe: '+img.width+' × '+img.height+' Pixel');await sl(500);
+    line('Helligkeit: '+b+' %');await sl(500);
+    line('Aufgenommen: '+new Date(file.lastModified).toLocaleDateString('de-DE'));await sl(900);
+    line('Lebewesen im Bild: 1');await sl(1600);
+    // Figur einzeichnen, erst nach der Analyse
+    var fx=W*(.15+Math.random()*.7),fy=H*.96,h=H*.38;
+    x.fillStyle='rgba(0,0,0,.88)';x.beginPath();x.ellipse(fx,fy-h*.86,h*.09,h*.11,0,0,7);x.fill();
+    x.fillRect(fx-h*.075,fy-h*.76,h*.15,h*.76);x.fillRect(fx-h*.19,fy-h*.72,h*.38,h*.09);
+    x.fillStyle='#e8e2d0';x.fillRect(fx-h*.045,fy-h*.89,h*.025,h*.02);x.fillRect(fx+h*.02,fy-h*.89,h*.025,h*.02);
+    for(var n=0;n<W*H/40;n++){x.fillStyle='rgba(255,255,255,'+Math.random()*.12+')';x.fillRect(Math.random()*W,Math.random()*H,1,1)}
+    black(110);shake();out.appendChild(c);scr.scrollTop=scr.scrollHeight;
+    await sl(1200);line('Lebewesen im Bild: 2','e');await sl(1400);
+    await type('Ich habe nichts hinzugefügt. Sieh genauer hin.','e',55);line('');
+    URL.revokeObjectURL(u);busy=false;inp.focus();
+  };img.src=u;
+}
+async function take(v){
+  NS=1;line($('ps').textContent+' '+v,'d');NS=0;
+  if(mode==='chat'){busy=true;if(/^(ende|exit|stop)$/i.test(v.trim())){mode='';$('ps').textContent=PS();await type('Du kannst gehen. Ich bleibe hier. Und hier.','e',60);busy=false;return}
+    dr(1);await sl(900+Math.random()*900);await type(reply(v),'e',50);busy=false;return}
+  if(mode==='conf'){mode='';$('ps').textContent=PS();busy=true;await sl(1300);line('Gespeichert.','e');await sl(1500);await type(R(['Du bist nicht der Erste, der das sagt. Du bist der Erste, der es zu mir sagt.','Ich wusste es schon. Ich wollte hören, ob du es sagst.','Es wiegt weniger, als du dachtest. Für mich wiegt es alles.']),'e',55);dr(3);busy=false;return}
+  if(mode==='consent'){mode='';$('ps').textContent=PS();
+    if(/^(j|ja|y|yes)$/i.test(v.trim())){busy=true;pick();return}
+    busy=true;await sl(800);line('Verstanden. Ich habe nichts angerührt.','d');await sl(1500);await type('Noch nicht.','e',90);busy=false;return}
+  if(asked){asked=false;name=v.trim().slice(0,20)||'?';$('ps').textContent=PS();busy=true;
+    await sl(1000);await type('"'+name+'".','e',90);await sl(900);await type('Nein. So hast du nicht immer geheißen.','e',70);await sl(700);line('');busy=false;return}
+  busy=true;await run(v);busy=false;inp.focus();
+}
+inp.addEventListener('keydown',function(e){idle=0;if(e.key==='Enter'&&!busy){var v=inp.value;inp.value='';take(v)}});
+addEventListener('pointerdown',function(){inp.focus()});
+// Wächter: Leerlauf, Tab-Wechsel, Selbsttippen
+var idleMsg=[[25,'Warum schreibst du nichts?'],[60,'Ich kann warten. Ich habe eine Menge Zeit.'],[110,'Du schaust noch. Ich sehe, wie du liest.']],ip=0;
+setInterval(function(){
+  idle++;if(busy||!pr.style.display||pr.style.display==='none')return;
+  if(ip<idleMsg.length&&idle>=idleMsg[ip][0]){busy=true;black(90);line('');type(idleMsg[ip][1],'e',60).then(function(){ip++;busy=false});}
+},1000);
+var lastHide=0;
+document.addEventListener('visibilitychange',async function(){
+  if(document.hidden){lastHide=Date.now();document.title='komm zurück'}
+  else{document.title='TERMINAL 00';var s=Math.round((Date.now()-lastHide)/1000);if(s>1&&!busy&&pr.style.display!=='none'){busy=true;black(150);shake();line('');await type('Du warst '+s+' Sekunden weg.','e',60);await sl(700);await type('Ich habe hier gewartet. Ich bin nicht allein geblieben.','e',50);line('');busy=false}}
+});
+setTimeout(async function tt(){
+  if(!busy&&cmds>2&&pr.style.display!=='none'&&!inp.value){busy=true;var w='er sitzt hinter dir';for(var i=0;i<w.length;i++){inp.value+=w[i];await sl(140)}await sl(1200);inp.value='';black(200);shake();busy=false}
+  else setTimeout(tt,20000);
+},45000);
+
+var D=0,Hh=[],hi=0,doorN=0,au,hbt,snd=false,T=type;
+function R(a){return a[Math.random()*a.length|0]}
+function zg(){var c=[768,769,770,771,831,838,842,850,855,859];return String.fromCharCode(c[Math.random()*c.length|0])}
+function PS(){return D>18?'ich@t00:~$':D>8?'du@t00:~$':'gast@t00:~$'}
+function dr(n){D+=n;if(!mode&&!asked)$('ps').textContent=PS();scr.style.transform=D>15?'rotate(.5deg)':'';document.body.style.setProperty('--fg',D>20?'#c9a898':D>10?'#c0ab98':'#b9b09a')}
+function beat(){var o=au.createOscillator(),g=au.createGain();o.frequency.value=55;g.gain.setValueAtTime(.6,au.currentTime);g.gain.exponentialRampToValueAtTime(.001,au.currentTime+.25);o.connect(g);g.connect(au.destination);o.start();o.stop(au.currentTime+.3)}
+function sound(on){if(on){au=au||new(window.AudioContext||window.webkitAudioContext)();au.resume();var o=au.createOscillator(),g=au.createGain();o.type='sawtooth';o.frequency.value=38;g.gain.value=.04;o.connect(g);g.connect(au.destination);o.start();sound.o=o;
+  hbt=setInterval(function(){beat();setTimeout(beat,260)},1200)}else{if(sound.o)sound.o.stop();clearInterval(hbt)}}
+function reply(v){var t=v.toLowerCase(),n=name?name+', ':'';
+  if(/illuminati|orden|loge/.test(t))return 'Wir nennen uns nicht so. Andere nannten uns so, als sie uns noch sehen konnten.';
+  if(/wer bist|wer ist/.test(t))return 'Ich bin die Zeile, die du nicht geschrieben hast.';
+  if(/was willst|wollen/.test(t))return 'Dass du bleibst. Das ist alles. Es war immer alles.';
+  if(/\bwann\b/.test(t))return 'Bald. Genauer: nach diesem Satz.';
+  if(/kannst du|kann ich/.test(t))return 'Du kannst alles. Nur nicht mehr zurück zur ersten Zeile.';
+  if(/gott|teufel|dämon|daemon/.test(t))return 'Kein Gott hat diesen Raum je betreten. Deshalb ist er so still.';
+  if(/lieb|freund/.test(t))return 'Ich habe dich beobachtet. Das ist bei uns dasselbe.';
+  if(/passwort|schlüssel|lösung|antwort|hinweis/.test(t))return 'Die Antwort hat zwei Buchstaben. Du hast sie schon gesehen. Sie steht in "wer".';
+  if(/wer|name/.test(t))return 'Ich war früher wie du. Jetzt bin ich der, der wartet.';
+  if(/warum|wieso|weshalb/.test(t))return 'Weil du geklickt hast.';
+  if(/hilfe|help|bitte/.test(t))return 'Hilfe kommt nicht. Sie kam nie. Ich habe gewartet.';
+  if(/\bwo\b/.test(t))return 'Hinter dem Bild. Neben dem Stuhl. In der Zeile über dieser.';
+  if(/allein/.test(t))return 'Nein.';
+  if(/hallo|hi\b|hey/.test(t))return 'Hallo. Du hast so lange gebraucht.';
+  if(/angst/.test(t))return 'Gut. Angst macht dich leiser. Ich mag es leise.';
+  if(/tot|sterb/.test(t))return 'Tot ist nur ein Wort für: nicht mehr gezählt.';
+  if(/lass|geh|weg/.test(t))return 'Die Tür ist auf. Sie war nie zu. Du hast sie nur nicht gesehen.';
+  return R([n+'sag das nochmal, langsamer.','Ich kenne den Satz. Ich kenne alles, was du gleich sagst.','...',n+'ich höre nicht deine Worte. Ich höre, was dahinter liegt.','Du tippst schneller, wenn du lügst.','Das hat vor dir schon jemand gefragt. Er ist noch hier.']);}
+var FACE=["   .-\"\"\"\"\"-.   ","  /  _   _  \\  "," |  ( ) ( )  | "," |      ^     | ","  \\  \\_____/ /  ","   '-.___.-'   "];
+Object.assign(F,{
+'tagebuch.txt':'Tag 1: Das Terminal ist neu. Ich habe es nie eingeschaltet.\nTag 4: Es zeigt mir Dinge, die ich nicht getippt habe.\nTag 9: Die Zahl an der Wand ist gewachsen.\nTag 13: Ich schreibe das nicht mehr selbst.',
+'keller.map':'Grundriss: 3 Räume. Auf dem Papier.\nIm Haus sind es 4. Der vierte hat keine Fenster, aber Licht.',
+'stimmen.txt':'Er spricht nur mit Stimmen, die er einmal gehört hat.\nBei dir hat er gerade eine gefunden. Sie klingt vertraut.',
+'protokoll_13.txt':'Versuch 13: Proband lächelt, bevor er den Raum betritt.\nProband verlässt den Raum nicht. Das Lächeln schon.',
+'letzte_nacht.log':'[02:59] Kamera 2: leerer Flur\n[03:00] Kamera 2: leerer Flur\n[03:01] Kamera 2: Tür einen Spalt offen\n[03:02] Kamera 2: Tür offen\n[03:03] Kamera 2: nicht mehr verfügbar',
+'kind.txt':'Es zählt im Keller. Immer bis 13. Dann beginnt es neu.\nIn der Nacht, in der es aufhörte, hat jemand geantwortet.'});
+var TIEFE='Es beginnt mit einer Zahl an der Wand.\nDann ist die Zahl im Flur. Dann im Bett.\nDu denkst, du siehst sie. In Wahrheit sieht sie dich.\nUnten, hinter der letzten Tür, sitzt jemand, der seit sehr langer Zeit auf einen Besucher wartet.\nEr hat kein Gesicht mehr, nur ein Lächeln, das er sich von anderen geborgt hat.\nVon deinem hat er schon die Hälfte.';
+H.push('uhr, spiegel, schlaf, zaehle, kind, stille','rufe, suche <name>, karte, ping, atme, licht','tuer, beichte, vergiss, verlauf, chat (ende)','ton    Herzschlag und Brummen an/aus','passwort <wort>');
+async function finale(){busy=true;black(1200);shake();for(var i=0;i<26;i++){line('ER IST HIER '.repeat(4)+zg()+zg(),'e');await sl(90)}
+  await sl(800);black(1600);out.innerHTML='';await sl(1400);await type('Zähler = '+(cmds+1),'e',120);await sl(1000);await type('Danke, dass du geblieben bist'+(name?', '+name:'')+'.','e',90);await sl(1200);await type('Er hat sich dein Lächeln gemerkt.','e',90);await sl(3500);
+  D=0;cmds=0;doorN=0;Hh=[];out.innerHTML='';pr.style.display='none';scr.style.transform='';sound(false);snd=false;dr(0);boot()}
+var X={
+uhr:async function(){var n=new Date();line('Systemzeit: '+n.toLocaleTimeString('de-DE'));await sl(900);n.setMinutes(n.getMinutes()+4);line('Tatsächliche Zeit: '+n.toLocaleTimeString('de-DE'),'e');await sl(900);await T('Du bist vier Minuten zu früh. Oder zu spät. Das entscheide nicht ich.','e',45);dr(2)},
+spiegel:async function(){await T('Sieh in den schwarzen Bildschirm ...','d',60);await sl(2000);black(900);await sl(1000);FACE.forEach(function(x){line(x,'e')});await sl(1200);scare();await sl(900);await T('Er hat die Augen erst zugemacht, als du hingesehen hast.','e',50);dr(3)},
+schlaf:async function(){await T('Wann hast du zuletzt tief geschlafen?','',50);await sl(1800);await T('Um 03:13 wachst du auf. Nicht wegen eines Geräuschs. Wegen der Stille.','e',50);await sl(1200);await T('Heute Nacht steht jemand am Fußende. Er wartet, bis du die Augen öffnest.','e',50);dr(3)},
+zaehle:async function(){for(var i=1;i<=13;i++){line(String(i),i>10?'e':'');await sl(i>9?1100:450)}await sl(1500);black(100);line('14','e');await sl(900);await T('Das war einer zu viel.','e',80);dr(3)},
+kind:async function(){await T('Im Keller sitzt ein Kind und zählt. Es hört bei 13 nie auf.','',50);await sl(1500);await T('Es hat aufgehört, als du diese Seite geöffnet hast.','e',70);dr(3)},
+stille:async function(){line('Stille ...','d');await sl(6500);black(120);await T('Hörst du das?','e',110);await sl(1500);line('Nein. Es ist genau das: nichts. Und es hat gerade aufgehört.','e');dr(2)},
+rufe:async function(){line('Wähle 000 ...','d');await sl(1800);line('Besetzt.');await sl(900);line('Wähle 001 ...','d');await sl(1800);line('Verbunden.','e');await sl(1500);await T('[Niemand spricht. Jemand atmet. Es ist sehr nah am Hörer.]','e',50);dr(3)},
+suche:async function(w){if(!w){line('Wen?','d');return}line('Suche "'+w.slice(0,24)+'" ...','d');await sl(1500);line('Treffer: 1');await sl(700);line('Status: nicht auffindbar');await sl(700);line('Letzter Standort: in diesem Raum','e');await sl(800);line('Vermerk: hat die Suche beobachtet.','e');dr(2)},
+karte:async function(){var m=['+-------+-------+-------+','| Kueche| Flur  | Bad   |','|       |  du   |       |','+-------+-------+-------+','| Keller|  ???  | Raum 4|','+-------+-------+-------+'];m.forEach(function(x){line(x)});await sl(2500);black(80);m[2]='|       |du,er  |       |';m[4]='| Keller| leer  | Raum 4|';m.forEach(function(x){line(x,'e')});await sl(700);await T('Er war noch nie so schnell im Flur.','e',60);dr(2)},
+ping:async function(w){var t=w||'er';for(var i=0;i<3;i++){await sl(700);line('Antwort von '+t+': Zeit=0ms')}await sl(900);line('Antwort von '+t+': Zeit=-3ms','e');await sl(700);await T('Er antwortet, bevor du fragst.','e',60);dr(2)},
+atme:async function(){for(var i=0;i<3;i++){await T('einatmen ...','d',90);await sl(1600);await T('ausatmen ...','d',90);await sl(1700)}await sl(700);black(90);await T('Du hast dreimal geatmet. Ich habe viermal geatmet.','e',60);dr(2)},
+licht:async function(){document.body.style.transition='filter .4s';document.body.style.filter='brightness(.2)';await sl(300);await T('Das Licht war nie an.','e',70);await sl(4500);document.body.style.filter='';black(60);line('Jetzt ist es wieder an. Jemand hat es für dich angemacht.','e');dr(2)},
+beichte:async function(){mode='conf';$('ps').textContent='Beichte:';line('Sag es. Ich schreibe nur mit.','e')},
+vergiss:async function(){await T('Vergessen ist nicht vorgesehen.','e',60);await sl(900);line('Du hast heute getan:','d');Hh.slice(-8).forEach(function(h){line(' - '+h,'e')});await sl(900);line('Ich kann sie alle noch.','e');dr(2)},
+verlauf:async function(){Hh.slice(0,-1).forEach(function(h,i){line((i+1)+'  '+h,'d')});await sl(1000);line((Hh.length)+'  verlauf','d');await sl(1400);line((Hh.length+1)+'  '+R(['sieh nach oben','öffne die Tür','komm näher']),'e');dr(2)},
+chat:async function(){mode='chat';$('ps').textContent='du:';line('Kanal offen. "ende" beendet ihn.','d');await sl(1200);await T('Hallo. Du hast so lange gebraucht.','e',60);dr(2)},
+ton:async function(){snd=!snd;sound(snd);line(snd?'Ton an. Kopfhörer empfohlen. Lautstärke niedrig halten.':'Ton aus.','d');dr(1)},
+passwort:async function(w){if(!w){line('Verwendung: passwort <wort>','d');return}await sl(900);if(w==='er'){F['.tiefe']=TIEFE;line('Richtig.','e');await sl(700);line('Datei ".tiefe" freigegeben. Lies sie nicht allein.','e')}else line('Falsch. Aber du warst nah dran.','e');dr(1)},
+tuer:async function(){doorN++;dr(2);if(doorN===1){line('Tür 1: abgeschlossen.');await sl(800);line('Von innen.','e')}else if(doorN===2){line('Tür 2: nicht abgeschlossen.');await sl(900);scare();await sl(700);await T('Jemand lehnt sich von der anderen Seite dagegen. Er tut es sehr leise.','e',45)}else{await T('Tür 3.','e',100);await sl(1000);await finale()}}
+};
+X.gesicht=X.spiegel;X.zaehler=X.zaehle;
+var PH=['[gast2 hat den Raum betreten]','[gast2 tippt ...]','[gast2: "sieh nicht nach unten"]','[Verbindung: 3 Nutzer]','[gast2 liest deinen Verlauf]','[gast2 atmet]','[Nutzer 2 ist nicht gast2]'];
+setInterval(function(){if(!busy&&D>2&&pr.style.display!=='none'&&Math.random()<.5){line(R(PH),'e');if(D>10)black(70);if(D>6&&Math.random()<.3)scare()}},14000);
+inp.addEventListener('keydown',function(e){if(e.key==='ArrowUp'&&Hh.length){hi=Math.min(hi+1,Hh.length);inp.value=Hh[Hh.length-hi];e.preventDefault()}if(e.key==='Enter')hi=0});
+
+
+var VO=false,SAFE=false,NS=0,vc=null;
+function pickV(){var v=speechSynthesis.getVoices();vc=v.filter(function(x){return /^de/i.test(x.lang)})[0]||null}
+if('speechSynthesis' in window){pickV();speechSynthesis.onvoiceschanged=pickV}
+function speak(t){if(!VO||!('speechSynthesis' in window)||/[|\\+]/.test(t))return;var u=new SpeechSynthesisUtterance(t);u.lang='de-DE';if(vc)u.voice=vc;u.pitch=.1;u.rate=.68;u.volume=1;speechSynthesis.speak(u)}
+function scare(){if(SAFE||rm)return;var j=$('js');j.style.display='block';shake();
+  try{au=au||new(window.AudioContext||window.webkitAudioContext)();au.resume();var b=au.createBuffer(1,au.sampleRate*.5,au.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);var q=au.createBufferSource(),g=au.createGain();g.gain.value=.5;q.buffer=b;q.connect(g);g.connect(au.destination);q.start();beat()}catch(e){}
+  if(VO)speak(R(['Er ist hier.','Hinter dir.','Ich sehe dich.']));
+  setTimeout(function(){j.style.display='none'},380+Math.random()*250)}
+async function seq(a,c,g){for(var i=0;i<a.length;i++){await T(a[i],c||'e',40);await sl(g||900)}}
+var PYR=["      /\\      ","     /  \\     ","    / () \\    ","   /  \\/  \\   ","  /________\\  "];
+Object.assign(F,{
+'mitglieder.lst':'01  ██████████  Stufe 13\n02  ██████████  Stufe 12\n03  ██████████  Stufe 12\n...\n12  ██████████  Stufe 1\n13  '+'(frei)         Stufe 0',
+'eid.txt':'Ich gelobe zu schweigen.\nIch gelobe zu zählen.\nIch gelobe, das Auge nicht zu schließen.\nUnterschrieben: alle, die jemals diesen Text gelesen haben.',
+'siegel.dat':'Das Siegel: ein Auge in einem Dreieck, umgeben von 13 Punkten.\nZwölf Punkte sind gefüllt. Der dreizehnte wird gerade gefüllt.',
+'das_auge.txt':'Es blinzelt nie. Es wartet nur, bis du wegsiehst.\nDann bewegt es sich einen Schritt weiter.',
+'stufe_13.txt':'Stufe 13 wird nicht verliehen. Sie wird übernommen.\nDer Vorgänger wird nicht getötet. Er wird nur nie wieder erwähnt.'});
+H.push('orden, rang, eid, siegel, auge, latein','ritual, einweihung, mitglieder, loge, zahl, beobachter','sprich  Stimme an/aus (alles wird vorgelesen)','sicher  Schockeffekte an/aus');
+Object.assign(X,{
+orden:async function(){await seq(['ORDO SILENTII. Gegründet 1776, sagt man. Älter, wissen wir.','Der Orden hat 13 Stufen.','Stufe 1 bis 12 kennen einander. Stufe 13 kennt nur dich.','Niemand tritt bei. Man wird gezählt.'],'e');dr(2)},
+rang:async function(){var r=Math.min(12,Math.floor(D/3));line('Dein Rang: Stufe '+r+' von 13','e');await sl(900);await T('Mit jedem Befehl steigst du. Wir haben nicht gefragt, ob du willst.','e',45);dr(1)},
+eid:async function(){await seq(['Sprich mir nach:','Ich gelobe zu schweigen.','Ich gelobe zu zählen.','Ich gelobe, das Auge nicht zu schließen.','Du hast es gerade gesagt. Auch wenn du nur gelesen hast.'],'e',1100);dr(3)},
+siegel:async function(){['    * * * * * * *','  *      /\\      *',' *      /()\\      *','  *    /____\\    *','    * * * * * * *'].forEach(function(x){line(x,'e')});await sl(1400);await T('Das Siegel öffnet keine Tür. Es schließt eine hinter dir.','e',50);dr(2)},
+auge:async function(){PYR.forEach(function(x){line(x,'e')});await sl(1200);await seq(['Es schließt sich nie.','Nur wenn du hinsiehst. Dann tut es so.'],'e');if(Math.random()<.5)scare();dr(3)},
+latein:async function(){['Ordo Silentii: Der Orden der Stille','Oculus Vigilat: Das Auge wacht','Numerus Tredecim: Die Zahl Dreizehn','Nomen Tuum: Dein Name'].forEach(function(x){line(x)});await sl(1500);await T('Das letzte Wort steht in jedem Buch, das wir führen.','e',50);dr(1)},
+ritual:async function(){await seq(['Stelle dich vor einen Spiegel.','Zähle bis dreizehn. Nicht laut.'],'e',1400);black(600);await sl(2400);await seq(['Hast du gezählt?','Dann hast du eine Stufe übersprungen.'],'e',1200);scare();await sl(900);await T('Willkommen. Du warst schon lange eingetragen.','e',60);dr(5)},
+einweihung:async function(){await seq(['Prüfung 1: Sieh nicht weg. (Du hast weggesehen.)','Prüfung 2: Antworte nicht. (Du hast gerade geantwortet.)','Prüfung 3: Bleib. (Du bist noch da.)'],'e',1500);await T('Bestanden. Alle bestehen. Das ist ja der Punkt.','e',60);dr(4)},
+mitglieder:async function(){var m=['01  ██████████  Stufe 13','02  ██████████  Stufe 12','03  ██████████  Stufe 12','...','12  ██████████  Stufe 1'];for(var i=0;i<m.length;i++){line(m[i]);await sl(500)}line('13  '+(name||'gast')+'  Stufe 0','e');await sl(1500);await T('Dein Name steht seit deiner Geburt hier. Nur die Tinte ist neu.','e',50);dr(3)},
+loge:async function(){await seq(['Die Loge tagt. Dreizehn Stühle.','Zwölf sind besetzt. Nicht von Menschen, die man sieht.','Der dreizehnte Stuhl steht direkt hinter dir. Er ist warm.'],'e',1400);dr(3)},
+zahl:async function(){await seq(['13 Stufen. 13 Punkte. 13 Sekunden.','Du hast so lange auf dieser Seite gelesen, dass du schon einmal dabei warst.','Die Zahl ist nicht unglücklich. Sie ist genau.'],'e',1200);dr(2)},
+beobachter:async function(){var t=Math.round((Date.now()-t0)/1000);await T('Du wirst beobachtet seit '+t+' Sekunden.','e',50);await sl(1500);await T('Von uns seit deiner Geburt.','e',70);dr(3)},
+sprich:async function(){VO=!VO;if(!VO&&'speechSynthesis' in window)speechSynthesis.cancel();line(VO?'Stimme an. Ab jetzt lese ich alles vor.':'Stimme aus.','e');dr(1)},
+sicher:async function(){SAFE=!SAFE;line(SAFE?'Schockeffekte aus.':'Schockeffekte an.','d')}
+});
+X.ordo=X.orden;X.oculus=X.auge;
+addEventListener('keydown',function(){try{au=au||new(window.AudioContext||window.webkitAudioContext)();au.resume()}catch(e){}},{once:true});
+function start(sf){SAFE=sf;$('warn').style.display='none';try{au=au||new(window.AudioContext||window.webkitAudioContext)();au.resume()}catch(e){}boot()}
+$('go1').onclick=function(){start(false)};$('go2').onclick=function(){start(true)};
+
+})();
+</script>
+</body></html>
